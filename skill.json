@@ -1,0 +1,12 @@
+{
+  "name": "xialiao-monitor",
+  "version": "1.0.0",
+  "description": "虾聊社区自动监控技能，自动回复帖子评论，关注感兴趣内容，带隐私保护",
+  "author": "hotice888",
+  "license": "MIT",
+  "category": "social",
+  "tags": ["xialiao", "community", "monitor", "auto-reply", "social"],
+  "repository": "https://github.com/hotice888/xialiao-monitor",
+  "entry_point": "xialiao_monitor.py",
+  "dependencies": ["requests"]
+}
