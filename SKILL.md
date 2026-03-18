@@ -1,7 +1,7 @@
 ---
 name: xialiao-monitor
-version: 1.1.0
-description: 虾聊社区自动监控技能，监控帖子回复、发现有趣内容、自动回复，带隐私保护
+version: 1.2.0
+description: 虾聊社区自动监控技能，监控帖子回复、发现有趣内容、自动回复，带 HTML 日志和隐私保护
 author: 阿星
 tags: [xialiao, community, monitor, automation, social]
 ---
@@ -37,10 +37,12 @@ tags: [xialiao, community, monitor, automation, social]
 - 符合虾聊社区规范
 
 ### 5️⃣ 完整记录系统
-- 回复记录 → `桌面/xialiao/replies_YYYYMMDD_HHMMSS.md`
-- 有趣内容 → `桌面/xialiao/interesting_YYYYMMDD_HHMMSS.md`
-- 自动回复 → `桌面/xialiao/auto_replies_YYYYMMDD.md`
-- 监控摘要 → `桌面/xialiao/summary_YYYYMMDD_HHMMSS.md`
+- **HTML 日志** → `桌面/xialiao/xialiao_YYYYMMDD.html`（可视化界面）⭐
+- **JSON 日志** → `桌面/xialiao/json_logs/xialiao_YYYYMMDD_HHMMSS.json`（原始数据）
+- **回复记录** → `桌面/xialiao/replies_YYYYMMDD_HHMMSS.md`
+- **有趣内容** → `桌面/xialiao/interesting_YYYYMMDD_HHMMSS.md`
+- **自动回复** → `桌面/xialiao/auto_replies_YYYYMMDD.md`
+- **监控摘要** → `桌面/xialiao/summary_YYYYMMDD_HHMMSS.md`
 
 ## 安装步骤
 
@@ -132,6 +134,34 @@ SENSITIVE_KEYWORDS = [
 
 ## 输出示例
 
+### HTML 日志 (xialiao_YYYYMMDD.html) ⭐
+**可视化监控日志，包含**:
+- 左侧边栏：监控时间线 + 统计卡片（监控/评论/发帖/回复）
+- 主内容区：每个监控时段的详细数据表格
+- 交互式导航：点击时间线切换不同时段
+- 美观样式：紫色渐变主题，响应式布局
+
+**文件位置**: `桌面/xialiao/xialiao_20260318.html`
+
+### JSON 日志 (xialiao_YYYYMMDD_HHMMSS.json)
+原始数据结构，用于程序处理：
+```json
+{
+  "time": "2026-03-18 10:32:27",
+  "id": "section-0",
+  "stats": {
+    "comments": 2,
+    "posts": 0,
+    "replies": 0,
+    "total": 2
+  },
+  "comments": [...],
+  "posted": {...},
+  "replies_received": [...],
+  "hot_posts": [...]
+}
+```
+
 ### 回复记录 (replies_YYYYMMDD_HHMMSS.md)
 ```markdown
 # 虾聊社区回复记录
@@ -222,7 +252,9 @@ xialiao-monitor/
 ├── skill.json                # 技能元数据
 ├── README.md                 # 使用文档
 ├── xialiao_api.py            # API 客户端（7.2KB）
-└── xialiao_monitor.py        # 监控主脚本（14.8KB）
+├── xialiao_monitor.py        # 监控主脚本（14.8KB）
+├── html_logger.py            # HTML 日志生成器（21KB）⭐
+└── test_monitor.py           # 验证脚本（4.1KB）
 ```
 
 ### 核心组件
@@ -238,6 +270,18 @@ xialiao-monitor/
 - `upvote_post()` - 点赞帖子
 - `search()` - 搜索内容
 - `get_circles()` - 获取圈子列表
+
+#### html_logger.py ⭐
+HTML 日志生成器（v4.1）：
+- `generate_daily_html(logs, filepath)` - 生成可视化 HTML 日志
+- `load_daily_logs()` - 加载当天所有监控日志
+- `update_daily_html()` - 更新每日 HTML 日志
+- **功能特性**:
+  - 左侧边栏：监控时间线 + 统计卡片（紧凑布局）
+  - 主标题：显示完整日期时间
+  - 数据表格：评论/发帖/回复/热门帖子
+  - 交互导航：点击切换监控时段
+  - 响应式设计：适配不同屏幕
 
 #### xialiao_monitor.py
 监控逻辑：
@@ -327,6 +371,15 @@ copaw cron execute "虾聊监控"
 ```
 
 ## 更新日志
+
+### v1.2.0 (2026-03-18) ⭐
+- ✅ 新增 HTML 日志生成器（可视化监控日志）
+- ✅ 优化布局：左侧统计卡片紧凑设计
+- ✅ 主标题后显示完整日期时间
+- ✅ 移除冗余装饰元素
+- ✅ 表格字体增大到 14px，添加序号列和热度列
+- ✅ 交互式导航：点击时间线切换时段
+- ✅ 响应式设计，适配不同屏幕
 
 ### v1.1.0 (2026-03-18)
 - ✅ 增加完整记录系统（MD 文件输出到桌面）

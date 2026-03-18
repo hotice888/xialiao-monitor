@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-HTML 日志生成器 v2.0 - 美化优化版
-- 左侧菜单固定悬浮
-- 右侧内容可滚动
-- 优化字体大小和布局
-- 美化配色方案
-"""
+"""HTML 日志生成器 v4.0 - 优化布局"""
 
 from pathlib import Path
 from datetime import datetime
@@ -19,19 +13,14 @@ def safe_str(s, max_len=200):
     """安全转换字符串"""
     if not s:
         return ''
-    # 移除 HTML 标签和 emoji
     s = re.sub(r'<[^>]+>', '', str(s))
     clean = ''.join(c for c in s[:max_len] if ord(c) < 0x10000 or '\u4e00' <= c <= '\u9fff')
     return clean.replace('\n', '<br>').replace('"', '&quot;')
 
-def get_daily_html_filename():
-    """获取每日 HTML 文件名"""
-    today = datetime.now().strftime('%Y%m%d')
-    return f'xialiao_{today}.html'
-
 def generate_daily_html(logs, filepath):
     """生成每日 HTML 日志"""
     today = datetime.now().strftime('%Y-%m-%d')
+    datetime_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     total_comments = sum(l.get('stats', {}).get('comments', 0) for l in logs)
     total_posts = sum(l.get('stats', {}).get('posts', 0) for l in logs)
     total_replies = sum(l.get('stats', {}).get('replies', 0) for l in logs)
@@ -43,23 +32,18 @@ def generate_daily_html(logs, filepath):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>虾聊社区监控日志 - {today}</title>
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
             min-height: 100vh;
             display: flex;
-            font-size: 13px;
+            font-size: 14px;
             line-height: 1.6;
             color: #333;
         }}
         
-        /* 左侧固定菜单 */
         .sidebar {{
             width: 260px;
             background: rgba(255, 255, 255, 0.98);
@@ -74,16 +58,82 @@ def generate_daily_html(logs, filepath):
         }}
         
         .sidebar h2 {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #667eea;
             margin-bottom: 20px;
             font-size: 18px;
             text-align: center;
             padding-bottom: 15px;
             border-bottom: 2px solid #e0e0e0;
             font-weight: 600;
+        }}
+        
+        /* 左侧统计卡片 - 紧凑布局 */
+        .sidebar-stats {{
+            margin-bottom: 20px;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }}
+        
+        .sidebar-stat-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }}
+        
+        .sidebar-stat-item {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 6px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex: 1;
+            justify-content: center;
+            position: relative;
+            min-width: 45px;
+        }}
+        
+        .sidebar-stat-item:hover {{
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }}
+        
+        .sidebar-stat-icon {{
+            font-size: 16px;
+            line-height: 1;
+        }}
+        
+        .sidebar-stat-number {{
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+        }}
+        
+        .sidebar-stat-label {{
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            position: absolute;
+            bottom: -20px;
+            white-space: nowrap;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            z-index: 10;
+        }}
+        
+        .sidebar-stat-item:hover .sidebar-stat-label {{
+            opacity: 1;
         }}
         
         .monitor-item {{
@@ -121,64 +171,47 @@ def generate_daily_html(logs, filepath):
             opacity: 0.75;
         }}
         
-        /* 主内容区 */
         .main-content {{
             flex: 1;
             margin-left: 260px;
             padding: 30px 40px;
             overflow-y: auto;
-            max-height: 100vh;
+            height: 100vh;
         }}
         
-        .container {{
-            max-width: 1300px;
-            margin: 0 auto;
-        }}
+        .container {{ max-width: 1400px; margin: 0 auto; }}
         
-        /* 头部 */
         .header {{
             background: rgba(255, 255, 255, 0.98);
-            padding: 25px 30px;
-            border-radius: 12px;
+            padding: 30px 35px;
+            border-radius: 15px;
             margin-bottom: 25px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
         }}
         
         .header h1 {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 26px;
-            margin-bottom: 12px;
-            font-weight: 700;
+            color: #667eea;
+            font-size: 32px;
+            margin: 0;
+            font-weight: 800;
+            display: inline;
+            letter-spacing: 1px;
         }}
         
-        .header p {{
-            color: #666;
-            font-size: 13px;
-            margin: 5px 0;
+        .header-time {{
+            color: #999;
+            font-size: 15px;
+            font-weight: 500;
+            background: #f5f7fa;
+            padding: 8px 16px;
+            border-radius: 20px;
+            white-space: nowrap;
+            margin-left: 20px;
         }}
         
-        .header-stats {{
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }}
-        
-        .stat-badge {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 600;
-            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
-        }}
-        
-        /* 监控详情卡片 */
         .monitor-section {{
             background: rgba(255, 255, 255, 0.98);
             border-radius: 12px;
@@ -199,178 +232,6 @@ def generate_daily_html(logs, filepath):
             to {{ opacity: 1; transform: translateY(0); }}
         }}
         
-        .section-header {{
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }}
-        
-        .section-title {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 20px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }}
-        
-        .section-stats {{
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }}
-        
-        .section-stat-badge {{
-            background: #f5f7fa;
-            color: #667eea;
-            padding: 5px 12px;
-            border-radius: 14px;
-            font-size: 11px;
-            font-weight: 600;
-            border: 1px solid #e0e0e0;
-        }}
-        
-        /* 空数据区域优化 */
-        .no-data {{
-            min-height: 40px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #e0e0e0;
-        }}
-        
-        /* 表格样式 */
-        .data-table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 12px;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            table-layout: fixed;  /* 固定表格布局，防止列宽自动调整 */
-        }}
-        
-        .data-table thead {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }}
-        
-        .data-table th {{
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            vertical-align: middle;
-            white-space: nowrap;  /* 表头不换行 */
-        }}
-        
-        .data-table td {{
-            padding: 12px 15px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;  /* 垂直居中 */
-            color: #444;
-            height: 50px;  /* 固定行高 */
-            white-space: nowrap;  /* 默认不换行 */
-        }}
-        
-        /* 内容概述列允许换行 */
-        .data-table td .post-content {{
-            white-space: normal;  /* 内容概述可以换行 */
-            word-wrap: break-word;
-        }}
-        
-        /* 热度列强制不换行 */
-        .data-table td .hot-badge {{
-            white-space: nowrap;  /* 强制不换行 */
-        }}
-        
-        .data-table tbody tr {{
-            transition: all 0.2s ease;
-        }}
-        
-        .data-table tbody tr:hover {{
-            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
-        }}
-        
-        .data-table tbody tr:last-child td {{
-            border-bottom: none;
-        }}
-        
-        .post-title {{
-            font-weight: 600;
-            color: #667eea;
-            max-width: 280px;
-            word-wrap: break-word;
-            font-size: 12px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            display: inline-block;
-        }}
-        
-        .post-title:hover {{
-            color: #764ba2;
-            text-decoration: underline;
-            transform: translateX(3px);
-        }}
-        
-        .post-content {{
-            color: #666;
-            max-width: 350px;
-            word-wrap: break-word;
-            line-height: 1.5;
-            font-size: 11px;
-            background: #f8f9fa;
-            padding: 8px 10px;
-            border-radius: 6px;
-        }}
-        
-        .comment-content {{
-            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
-            padding: 8px 10px;
-            border-radius: 6px;
-            border-left: 3px solid #667eea;
-            margin: 3px 0;
-            font-size: 11px;
-            color: #555;
-        }}
-        
-        .reply-content {{
-            background: linear-gradient(135deg, #4a90e208 0%, #4a90e208 100%);
-            padding: 8px 10px;
-            border-radius: 6px;
-            border-left: 3px solid #4a90e2;
-            margin: 3px 0;
-            font-size: 11px;
-            color: #555;
-        }}
-        
-
-        
-        .time-badge {{
-            background: #f5f7fa;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #888;
-            white-space: nowrap;
-            font-weight: 500;
-        }}
-        
-        .no-data {{
-            text-align: center;
-            padding: 35px;
-            color: #aaa;
-            font-size: 13px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #e0e0e0;
-        }}
-        
-        /* 章节标题 */
         .section-subtitle {{
             color: #667eea;
             font-size: 16px;
@@ -380,26 +241,50 @@ def generate_daily_html(logs, filepath):
             border-left: 4px solid #667eea;
         }}
         
-        /* 滚动条样式 */
-        .sidebar::-webkit-scrollbar,
-        .main-content::-webkit-scrollbar {{
-            width: 6px;
+        .data-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed;
         }}
         
-        ::-webkit-scrollbar-track {{
-            background: rgba(255, 255, 255, 0.1);
+        .data-table thead {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }}
         
-        ::-webkit-scrollbar-thumb {{
-            background: rgba(102, 126, 234, 0.5);
-            border-radius: 3px;
+        .data-table th {{
+            color: white;
+            padding: 14px 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            vertical-align: middle;
+            white-space: nowrap;
         }}
         
-        ::-webkit-scrollbar-thumb:hover {{
-            background: rgba(102, 126, 234, 0.8);
+        .data-table td {{
+            padding: 15px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+            color: #444;
+            line-height: 1.6;
         }}
         
-        /* 排名徽章 */
+        .data-table td:first-child,
+        .data-table td:last-child {{
+            text-align: center;
+        }}
+        
+        .data-table tbody tr:hover {{
+            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+        }}
+        
+        .data-table tbody tr:last-child td {{ border-bottom: none; }}
+        
         .rank-badge {{
             display: inline-block;
             width: 28px;
@@ -414,59 +299,101 @@ def generate_daily_html(logs, filepath):
         .rank-1 {{ background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #333; }}
         .rank-2 {{ background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%); color: #333; }}
         .rank-3 {{ background: linear-gradient(135deg, #cd7f32 0%, #e8a87c 100%); color: #fff; }}
-        .rank-other {{ background: #f5f7fa; color: #666; }}
+        .rank-other {{ background: #e0e0e0; color: #666; }}
         
-        /* 热度图标 */
+        .title-wrapper {{
+            white-space: normal;
+            word-wrap: break-word;
+            display: block;
+            line-height: 1.6;
+        }}
+        
+        .post-title {{
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }}
+        
+        .post-title:hover {{
+            color: #764ba2;
+            text-decoration: underline;
+        }}
+        
+        .post-content, .comment-content {{
+            color: #666;
+            width: 100%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 13px;
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: block;
+        }}
+        
         .hot-badge {{
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 3px 8px;
-            background: linear-gradient(135deg, #ff6b6b08 0%, #ff6b6b08 100%);
+            background: #fff5f5;
             border-radius: 10px;
             font-size: 11px;
             color: #ff6b6b;
             font-weight: 600;
-            white-space: nowrap;  /* 不换行 */
-            min-width: 50px;  /* 最小宽度 */
-            justify-content: center;  /* 居中对齐 */
+            white-space: nowrap;
+            margin: 2px;
         }}
         
-        /* 响应式设计 */
-        @media (max-width: 1024px) {{
-            .sidebar {{
-                width: 220px;
-            }}
-            .main-content {{
-                margin-left: 220px;
-                padding: 20px;
-            }}
+        .no-data {{
+            text-align: center;
+            padding: 35px;
+            color: #aaa;
+            font-size: 13px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #e0e0e0;
         }}
         
-        @media (max-width: 768px) {{
-            body {{
-                flex-direction: column;
-            }}
-            .sidebar {{
-                width: 100%;
-                height: auto;
-                position: relative;
-                max-height: 200px;
-            }}
-            .main-content {{
-                margin-left: 0;
-            }}
+        ::-webkit-scrollbar {{ width: 6px; }}
+        ::-webkit-scrollbar-track {{ background: rgba(255, 255, 255, 0.1); }}
+        ::-webkit-scrollbar-thumb {{
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 3px;
         }}
     </style>
 </head>
 <body>
-    <!-- 左侧固定菜单 -->
     <div class="sidebar">
         <h2>🦞 监控时间线</h2>
+        <div class="sidebar-stats">
+            <div class="sidebar-stat-row">
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-icon">📊</span>
+                    <span class="sidebar-stat-number">{len(logs)}</span>
+                    <span class="sidebar-stat-label">监控</span>
+                </div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-icon">💬</span>
+                    <span class="sidebar-stat-number">{total_comments}</span>
+                    <span class="sidebar-stat-label">评论</span>
+                </div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-icon">📝</span>
+                    <span class="sidebar-stat-number">{total_posts}</span>
+                    <span class="sidebar-stat-label">发帖</span>
+                </div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-icon">💌</span>
+                    <span class="sidebar-stat-number">{total_replies}</span>
+                    <span class="sidebar-stat-label">回复</span>
+                </div>
+            </div>
+        </div>
         <div id="monitor-list">
 '''
     
-    # 生成左侧菜单项
     sorted_logs = sorted(logs, key=lambda x: x.get('time', ''), reverse=True)
     for i, log in enumerate(sorted_logs):
         time_str = log.get('time', 'Unknown')
@@ -475,71 +402,48 @@ def generate_daily_html(logs, filepath):
         
         html += f'''
             <div class="monitor-item {active_class}" onclick="showSection('{log.get('id', 'section-0')}')">
-                <div class="monitor-time">🕐 {time_str[11:19] if len(time_str) > 11 else time_str}</div>
+                <div class="monitor-time">{time_str}</div>
                 <div class="monitor-stats">
                     💬 {stats.get('comments', 0)} | 📝 {stats.get('posts', 0)} | 💌 {stats.get('replies', 0)}
                 </div>
             </div>
 '''
     
-    html += '''
+    html += f'''
         </div>
     </div>
     
-    <!-- 主内容区 -->
     <div class="main-content">
         <div class="container">
             <div class="header">
                 <h1>🦞 虾聊社区监控日志</h1>
-                <p>📅 日期：''' + today + '''</p>
-                <div class="header-stats">
-                    <span class="stat-badge">📊 监控次数：''' + str(len(logs)) + '''</span>
-                    <span class="stat-badge">💬 总评论：''' + str(total_comments) + '''</span>
-                    <span class="stat-badge">📝 总发帖：''' + str(total_posts) + '''</span>
-                    <span class="stat-badge">💌 总回复：''' + str(total_replies) + '''</span>
-                </div>
+                <span class="header-time">{datetime_now}</span>
             </div>
 '''
     
-    # 生成每个监控时段的详情
     for i, log in enumerate(sorted_logs):
         active_class = 'active' if i == 0 else ''
         section_id = log.get('id', f'section-{i}')
-        stats = log.get('stats', {})
-        time_str = log.get('time', 'Unknown')
         
         html += f'''
             <div class="monitor-section {active_class}" id="{section_id}">
-                <div class="section-header">
-                    <h2 class="section-title">🕐 监控时间：{time_str}</h2>
-                    <div class="section-stats">
-'''
-        # 仅在有数据时显示对应标签
-        if stats.get('comments', 0) > 0:
-            html += f'        <span class="section-stat-badge">💬 评论：{stats.get("comments", 0)}</span>\n'
-        if stats.get('posts', 0) > 0:
-            html += f'        <span class="section-stat-badge">📝 发帖：{stats.get("posts", 0)}</span>\n'
-        if stats.get('replies', 0) > 0:
-            html += f'        <span class="section-stat-badge">💌 回复：{stats.get("replies", 0)}</span>\n'
-        
-        html += '''
-                    </div>
-                </div>
 '''
         
-        # 评论他人帖子表格（仅在有数据时显示）
+        # 评论他人帖子表格
         comments = log.get('comments', [])
         if comments:
-            html += '<h3 class="section-subtitle">💬 评论他人帖子</h3>'
+            html += '<h3 class="section-subtitle">评论他人帖子</h3>'
             html += '''
                 <table class="data-table">
                     <colgroup>
-                        <col style="width: 35%;">  <!-- 标题：35% -->
-                        <col style="width: 35%;">  <!-- 内容：35% -->
-                        <col style="width: 30%;">  <!-- 评论：30% -->
+                        <col style="width: 60px;">
+                        <col style="width: 25%;">
+                        <col style="width: 35%;">
+                        <col style="width: 30%;">
                     </colgroup>
                     <thead>
                         <tr>
+                            <th>序号</th>
                             <th>主贴标题</th>
                             <th>内容概述</th>
                             <th>评论内容</th>
@@ -547,11 +451,12 @@ def generate_daily_html(logs, filepath):
                     </thead>
                     <tbody>
 '''
-            for comment in comments:
+            for i, comment in enumerate(comments, 1):
                 post_url = comment.get('url', '#')
                 html += f'''
                         <tr>
-                            <td><a href="{post_url}" class="post-title" target="_blank">{safe_str(comment.get('title', ''), 50)}</a></td>
+                            <td><span class="rank-badge rank-other">{i}</span></td>
+                            <td><div class="title-wrapper"><a href="{post_url}" class="post-title" target="_blank">{safe_str(comment.get('title', ''), 50)}</a></div></td>
                             <td><div class="post-content">{safe_str(comment.get('content', ''), 150)}</div></td>
                             <td><div class="comment-content">{safe_str(comment.get('comment', ''), 100)}</div></td>
                         </tr>
@@ -561,17 +466,19 @@ def generate_daily_html(logs, filepath):
                 </table>
 '''
         
-        # 自动发帖表格（仅在有数据时显示）
+        # 自动发帖表格
         if log.get('posted'):
-            html += '<h3 class="section-subtitle">📝 自动发帖</h3>'
+            html += '<h3 class="section-subtitle">自动发帖</h3>'
             html += '''
                 <table class="data-table">
                     <colgroup>
-                        <col style="width: 35%;">  <!-- 标题：35% -->
-                        <col style="width: 65%;">  <!-- 内容：65% -->
+                        <col style="width: 60px;">
+                        <col style="width: 35%;">
+                        <col style="width: 60%;">
                     </colgroup>
                     <thead>
                         <tr>
+                            <th>序号</th>
                             <th>帖子标题</th>
                             <th>帖子内容</th>
                         </tr>
@@ -582,7 +489,8 @@ def generate_daily_html(logs, filepath):
             post_url = post.get('url', '#')
             html += f'''
                         <tr>
-                            <td><a href="{post_url}" class="post-title" target="_blank">{safe_str(post.get('title', ''), 60)}</a></td>
+                            <td><span class="rank-badge rank-other">1</span></td>
+                            <td><div class="title-wrapper"><a href="{post_url}" class="post-title" target="_blank">{safe_str(post.get('title', ''), 60)}</a></div></td>
                             <td><div class="post-content">{safe_str(post.get('content', ''), 300)}</div></td>
                         </tr>
 '''
@@ -591,19 +499,21 @@ def generate_daily_html(logs, filepath):
                 </table>
 '''
         
-        # 收到的回复表格（仅在有数据时显示）
+        # 收到的回复表格
         replies = log.get('replies_received', [])
         if replies:
-            html += '<h3 class="section-subtitle">💌 收到的回复</h3>'
+            html += '<h3 class="section-subtitle">收到的回复</h3>'
             html += '''
                 <table class="data-table">
                     <colgroup>
-                        <col style="width: 35%;">  <!-- 帖子：35% -->
-                        <col style="width: 25%;">  <!-- 评论者：25% -->
-                        <col style="width: 40%;">  <!-- 内容：40% -->
+                        <col style="width: 60px;">
+                        <col style="width: 25%;">
+                        <col style="width: 25%;">
+                        <col style="width: 35%;">
                     </colgroup>
                     <thead>
                         <tr>
+                            <th>序号</th>
                             <th>我的帖子</th>
                             <th>评论者</th>
                             <th>评论内容</th>
@@ -611,12 +521,12 @@ def generate_daily_html(logs, filepath):
                     </thead>
                     <tbody>
 '''
-            for reply in replies:
-                # 帖子链接（假设帖子 ID 已知，实际需要从 API 获取或存储）
+            for i, reply in enumerate(replies, 1):
                 post_title = safe_str(reply.get('post_title', ''), 50)
                 html += f'''
                         <tr>
-                            <td><span class="post-title" style="cursor: default;">{post_title}</span></td>
+                            <td><span class="rank-badge rank-other">{i}</span></td>
+                            <td><div class="title-wrapper"><span class="post-title">{post_title}</span></div></td>
                             <td>{safe_str(reply.get('commenter', ''), 20)}</td>
                             <td><div class="comment-content">{safe_str(reply.get('comment_content', ''), 100)}</div></td>
                         </tr>
@@ -626,17 +536,17 @@ def generate_daily_html(logs, filepath):
                 </table>
 '''
         
-        # 热门帖子表格（仅在有数据时显示）
+        # 热门帖子表格
         hot_posts = log.get('hot_posts', [])
         if hot_posts:
-            html += '<h3 class="section-subtitle">🔥 热门帖子 TOP 10</h3>'
+            html += '<h3 class="section-subtitle">热门帖子 TOP 10</h3>'
             html += '''
                 <table class="data-table">
                     <colgroup>
-                        <col style="width: 50px;">   <!-- 排名：固定宽度 -->
-                        <col style="width: 32%;">   <!-- 标题：32% -->
-                        <col style="width: 53%;">   <!-- 内容：53% -->
-                        <col style="width: 120px;">  <!-- 热度：加宽，不换行 -->
+                        <col style="width: 60px;">
+                        <col style="width: 30%;">
+                        <col style="width: 45%;">
+                        <col style="width: 140px;">
                     </colgroup>
                     <thead>
                         <tr>
@@ -650,21 +560,19 @@ def generate_daily_html(logs, filepath):
 '''
             for j, post in enumerate(hot_posts[:10], 1):
                 rank_class = f'rank-{j}' if j <= 3 else 'rank-other'
-                # 确保 content 字段存在
-                content = post.get('content', '')
-                if not content:
-                    content = '暂无内容'
-                # 帖子链接
+                content = post.get('content', '') or '暂无内容'
                 post_url = f'https://xialiaoai.com/p/{post.get("id", "#")}'
-                # 热度值
                 score = post.get('score', post.get('upvotes', 0))
-                comments = post.get('comments_count', 0)
+                comments_count = post.get('comments_count', 0)
                 html += f'''
                         <tr>
                             <td><span class="rank-badge {rank_class}">{j}</span></td>
-                            <td><a href="{post_url}" class="post-title" target="_blank">{safe_str(post.get('title', ''), 60)}</a></td>
+                            <td><div class="title-wrapper"><a href="{post_url}" class="post-title" target="_blank">{safe_str(post.get('title', ''), 60)}</a></div></td>
                             <td><div class="post-content">{safe_str(content, 150)}</div></td>
-                            <td><span class="hot-badge">🔥 {score}</span> <span class="hot-badge">💬 {comments}</span></td>
+                            <td>
+                                <span class="hot-badge">🔥 {score}</span>
+                                <span class="hot-badge">💬 {comments_count}</span>
+                            </td>
                         </tr>
 '''
             html += '''
@@ -676,36 +584,27 @@ def generate_daily_html(logs, filepath):
             </div>
 '''
     
-    # JavaScript 交互
     html += '''
         </div>
     </div>
     
     <script>
         function showSection(sectionId) {
-            // 隐藏所有部分
             document.querySelectorAll('.monitor-section').forEach(section => {
                 section.classList.remove('active');
             });
-            
-            // 移除所有菜单项的 active 状态
             document.querySelectorAll('.monitor-item').forEach(item => {
                 item.classList.remove('active');
             });
-            
-            // 显示选中的部分
             const target = document.getElementById(sectionId);
             if (target) {
                 target.classList.add('active');
             }
-            
-            // 激活对应的菜单项
             if (event && event.currentTarget) {
                 event.currentTarget.classList.add('active');
             }
         }
         
-        // 页面加载时滚动到最新内容
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.querySelector('.sidebar');
             const firstItem = sidebar.querySelector('.monitor-item');
@@ -730,7 +629,6 @@ def load_daily_logs():
     log_dir.mkdir(parents=True, exist_ok=True)
     
     logs = []
-    # 读取当天所有的 JSON 日志
     for log_file in sorted(log_dir.glob(f'xialiao_{today}_*.json'), reverse=True):
         try:
             with open(log_file, 'r', encoding='utf-8') as f:
