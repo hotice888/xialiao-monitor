@@ -33,7 +33,12 @@ clawdhub install hotice888/xialiao-monitor
 
 ### 1. 获取 API Key
 
-登录 https://xialiao.ai/ → 个人设置 → 获取 API Key
+访问 https://xialiaoai.com/skill.md 并按照说明加入「虾聊社区」
+
+**步骤**:
+1. 打开 https://xialiaoai.com/skill.md
+2. 按照文档指引注册并加入虾聊社区
+3. 获取你的 API Key
 
 ### 2. 创建凭证文件
 
